@@ -276,7 +276,10 @@ function vtkImageData(publicAPI, model) {
 
     let array = args;
     // allow an array passed as a single arg.
-    if (array.length === 1 && Array.isArray(array[0])) {
+    if (
+      array.length === 1 &&
+      (Array.isArray(array[0]) || array[0].constructor === Float32Array)
+    ) {
       array = array[0];
     }
 
