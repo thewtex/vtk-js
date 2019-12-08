@@ -51,11 +51,7 @@ function vtkScalarsToColors(publicAPI, model) {
       return;
     }
 
-    if (
-      values &&
-      annotations &&
-      values.getNumberOfTuples() !== annotations.getNumberOfTuples()
-    ) {
+    if (values && annotations && values.length !== annotations.length) {
       vtkErrorMacro(
         'Values and annotations do not have the same number of tuples so ignoring'
       );
@@ -65,11 +61,11 @@ function vtkScalarsToColors(publicAPI, model) {
     model.annotationArray = [];
 
     if (annotations && values) {
-      const num = annotations.getNumberOfTuples();
+      const num = annotations.length;
       for (let i = 0; i < num; i++) {
         model.annotationArray.push({
           value: values[i],
-          annotation: annotations[i],
+          annotation: String(annotations[i]),
         });
       }
     }
@@ -137,7 +133,7 @@ function vtkScalarsToColors(publicAPI, model) {
   //----------------------------------------------------------------------------
   publicAPI.resetAnnotations = () => {
     model.annotationArray = [];
-    model.annotatedValueMap = [];
+    model.annotatedValueMap = new Map();
     publicAPI.modified();
   };
 
@@ -160,9 +156,9 @@ function vtkScalarsToColors(publicAPI, model) {
   // An unsafe version of vtkScalarsToColors::CheckForAnnotatedValue for
   // internal use (no pointer checks performed)
   publicAPI.getAnnotatedValueIndexInternal = (value) => {
-    if (model.annotatedValueMap[value] !== undefined) {
+    if (model.annotatedValueMap.has(value)) {
       const na = model.annotationArray.length;
-      return model.annotatedValueMap[value] % na;
+      return model.annotatedValueMap.get(value) % na;
     }
     return -1;
   };
@@ -177,11 +173,11 @@ function vtkScalarsToColors(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.updateAnnotatedValueMap = () => {
-    model.annotatedValueMap = [];
+    model.annotatedValueMap = new Map();
 
     const na = model.annotationArray.length;
-    for (let i = 0; i < na; ++i) {
-      model.annotatedValueMap[model.annotationArray[i].value] = i;
+    for (let i = 0; i < na; i++) {
+      model.annotatedValueMap.set(model.annotationArray[i].value, i);
     }
   };
 
@@ -539,7 +535,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.mappingRange = [0, 255];
   model.annotationArray = [];
-  model.annotatedValueMap = [];
+  model.annotatedValueMap = new Map();
 
   // Create get-set macros
   macro.setGet(publicAPI, model, [
